@@ -1,0 +1,285 @@
+/* =========================
+   Overall page
+========================= */
+
+body {
+    width: 400px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f8f9fc;
+    color: #222;
+}
+
+
+/* =========================
+   Main container
+========================= */
+
+.container {
+    padding: 20px;
+}
+
+
+/* =========================
+   Header
+========================= */
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.logo {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8f0fe;
+    border-radius: 12px;
+
+    font-size: 22px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.subtitle {
+    margin: 3px 0 0 0;
+    color: #666;
+    font-size: 13px;
+}
+
+
+/* =========================
+   Status
+========================= */
+
+.status {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+
+    border-radius: 8px;
+
+    background: #eef2f7;
+    color: #555;
+
+    text-align: center;
+    font-size: 13px;
+}
+
+
+/* =========================
+   Analyze button
+========================= */
+
+.analyze-btn {
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #2563eb;
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 15px;
+    font-weight: bold;
+
+    margin-bottom: 16px;
+}
+
+.analyze-btn:hover {
+    background: #1d4ed8;
+}
+
+.analyze-btn:disabled {
+    background: #aeb7c5;
+    cursor: not-allowed;
+}
+
+
+/* =========================
+   AI Summary
+========================= */
+
+#summaryContainer {
+    margin-bottom: 18px;
+
+    padding: 14px;
+
+    border-radius: 12px;
+
+    background: white;
+
+    border: 1px solid #e1e5eb;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+    font-size: 14px;
+}
+
+.summary-title {
+    font-size: 16px;
+    font-weight: bold;
+
+    margin-bottom: 10px;
+}
+
+.summary-item {
+    margin: 6px 0;
+}
+
+
+/* =========================
+   Reviews section
+========================= */
+
+.reviews-section h2 {
+    font-size: 17px;
+    margin: 0 0 10px 0;
+}
+
+
+/* =========================
+   Reviews container
+========================= */
+
+#reviewsContainer {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+
+/* =========================
+   Individual review
+========================= */
+
+.review {
+    padding: 12px;
+
+    margin-bottom: 10px;
+
+    border-radius: 10px;
+
+    background: white;
+
+    border: 1px solid #e1e5eb;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* Review number */
+
+.review-number {
+    font-weight: bold;
+
+    margin-bottom: 7px;
+
+    font-size: 13px;
+}
+
+
+/* =========================
+   Scrollbar
+========================= */
+
+#reviewsContainer::-webkit-scrollbar {
+    width: 6px;
+}
+
+#reviewsContainer::-webkit-scrollbar-thumb {
+    background: #c5cbd3;
+    border-radius: 10px;
+}
+
+#reviewsContainer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* =========================
+   Aspect Analysis
+========================= */
+
+.aspect-title {
+    margin-top: 14px;
+    margin-bottom: 8px;
+
+    font-size: 15px;
+    font-weight: bold;
+
+    border-top: 1px solid #e1e5eb;
+    padding-top: 12px;
+}
+
+.aspect-item {
+    display: flex;
+    justify-content: space-between;
+
+    padding: 7px 9px;
+
+    margin: 5px 0;
+
+    border-radius: 7px;
+
+    background: #f4f6f9;
+
+    font-size: 13px;
+}
+
+/* ReviewLens Dashboard */
+
+.dashboard-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.dashboard-card {
+    padding: 10px;
+    border-radius: 9px;
+    background: #f4f6f9;
+    text-align: center;
+}
+
+.dashboard-icon {
+    font-size: 18px;
+    margin-bottom: 3px;
+}
+
+.dashboard-value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.dashboard-label {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.overall-sentiment {
+    margin-top: 10px;
+    padding: 9px;
+    border-radius: 8px;
+    background: #eef2f7;
+    text-align: center;
+    font-size: 13px;
+}
