@@ -68,6 +68,9 @@ class Review(BaseModel):
 
 
 class ReviewRequest(BaseModel):
+    platform: str = "amazon"
+    product_name: str | None = None
+    product_id: str | None = None
     reviews: list[Review]
 
 def detect_aspects(review):
@@ -181,6 +184,9 @@ def analyze_reviews(request: ReviewRequest):
         })
 
     return {
+    "platform": request.platform,
+    "product_name": request.product_name,
+    "product_id": request.product_id,
     "total_reviews": len(results),
     "results": results,
     "aspect_sentiments": aspect_sentiments

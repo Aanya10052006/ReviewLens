@@ -283,3 +283,116 @@ h1 {
     text-align: center;
     font-size: 13px;
 }
+
+
+/* =========================
+   Cross-platform matching
+========================= */
+
+#productMatchContainer,
+#comparisonContainer {
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid #e1e5eb;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    font-size: 13px;
+}
+
+.match-title,
+.comparison-title {
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.product-match-card {
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #e1e5eb;
+    border-radius: 10px;
+    background: #f8f9fc;
+}
+
+.product-match-card img {
+    display: block;
+    width: 100%;
+    height: 130px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.product-match-name {
+    margin-bottom: 8px;
+    font-weight: bold;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.product-match-price {
+    margin-bottom: 10px;
+    color: #2563eb;
+    font-weight: bold;
+}
+
+.match-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.match-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.confirm-match-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.confirm-match-btn:hover {
+    background: #1d4ed8;
+}
+
+.reject-match-btn {
+    background: #eef2f7;
+    color: #333;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.comparison-card {
+    padding: 10px;
+    border-radius: 9px;
+    background: #f4f6f9;
+    min-width: 0;
+}
+
+.comparison-card h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.comparison-metric {
+    margin: 7px 0;
+    line-height: 1.4;
+}
+
+.match-note {
+    margin-top: 10px;
+    color: #666;
+    font-size: 12px;
+    line-height: 1.5;
+}

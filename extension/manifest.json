@@ -13,22 +13,22 @@
     "scripting"
   ],
 
+  
   "host_permissions": [
     "*://www.amazon.in/*",
     "*://www.amazon.com/*",
+    "*://www.flipkart.com/*",
     "http://127.0.0.1:8001/*",
     "http://localhost:8001/*"
   ],
-
   "content_scripts": [
     {
       "matches": [
         "*://www.amazon.in/*",
-        "*://www.amazon.com/*"
+        "*://www.amazon.com/*",
+        "*://www.flipkart.com/*"
       ],
-      "js": [
-        "content.js"
-      ]
+      "js": ["content.js"]
     }
   ]
 }

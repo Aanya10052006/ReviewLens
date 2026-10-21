@@ -14,53 +14,47 @@ document.addEventListener("DOMContentLoaded", async () => {
     // -----------------------------
 
     try {
+    const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+    });
 
-        const tabs = await chrome.tabs.query({
-            active: true,
-            currentWindow: true
-        });
+    currentTab = tabs[0];
 
-        currentTab = tabs[0];
+    if (!currentTab || !currentTab.url) {
+        status.textContent = "Unable to detect page.";
+        analyzeBtn.disabled = true;
+        return;
+    }
 
-        if (!currentTab || !currentTab.url) {
+    const url = currentTab.url;
 
-            status.textContent =
-                "Unable to detect page.";
+    const isAmazon =
+        url.includes("amazon.in") ||
+        url.includes("amazon.com");
 
-            analyzeBtn.disabled = true;
+    const isFlipkart =
+        url.includes("flipkart.com");
 
-            return;
-        }
+    if (isAmazon || isFlipkart) {
+        status.textContent = isAmazon
+            ? "Amazon page detected ✓"
+            : "Flipkart page detected ✓";
 
-        const url = currentTab.url;
-
-        if (
-            url.includes("amazon.in") ||
-            url.includes("amazon.com")
-        ) {
-
-            status.textContent =
-                "Amazon page detected ✓";
-
-            analyzeBtn.disabled = false;
-
-        } else {
-
-            status.textContent =
-                "Please open an Amazon product page.";
-
-            analyzeBtn.disabled = true;
-        }
-
-    } catch (error) {
-
-        console.error(error);
-
+        analyzeBtn.disabled = false;
+    } else {
         status.textContent =
-            "Something went wrong.";
+            "Please open an Amazon or Flipkart product page.";
 
         analyzeBtn.disabled = true;
     }
+
+} catch (error) {
+    console.error(error);
+
+    status.textContent = "Something went wrong.";
+    analyzeBtn.disabled = true;
+}
 
 
     // -----------------------------
@@ -125,6 +119,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
 
                     body: JSON.stringify({
+                        platform: "amazon",
+                        product_name: document.title,
                         reviews: reviews
                     })
                 }

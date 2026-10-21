@@ -1,69 +1,54 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ReviewLens</title>
-
     <link rel="stylesheet" href="popup.css">
 </head>
-
 <body>
-
     <div class="container">
 
-        <!-- Header -->
         <div class="header">
-
-            <div class="logo">
-                🔍
-            </div>
-
+            <div class="logo">🔍</div>
             <div>
                 <h1>ReviewLens</h1>
-
-                <p class="subtitle">
-                    AI-powered review analysis
-                </p>
+                <p class="subtitle">AI-powered review analysis</p>
             </div>
-
         </div>
 
-
-        <!-- Status -->
         <div id="status" class="status">
             Checking page...
         </div>
 
+        <!-- Find the same product on the other marketplace -->
+        <button id="findMatchBtn" class="analyze-btn">
+            Find Matching Product
+        </button>
 
-        <!-- Analyze Button -->
+        <!-- Suggested product and confirmation UI -->
+        <div id="productMatchContainer"></div>
+
+        <!-- Existing review analysis button -->
         <button id="analyzeBtn" class="analyze-btn">
             Analyze Reviews
         </button>
 
-
-        <!-- AI Summary -->
+        <!-- Existing AI dashboard -->
         <div id="summaryContainer"></div>
 
+        <!-- Cross-platform comparison results -->
+        <div id="comparisonContainer"></div>
 
-        <!-- Reviews -->
+        <!-- Existing individual reviews -->
         <div class="reviews-section">
-
             <h2>Reviews</h2>
-
             <div id="reviewsContainer"></div>
-
         </div>
 
     </div>
 
-
     <script src="popup.js"></script>
-
 </body>
-
 </html>
