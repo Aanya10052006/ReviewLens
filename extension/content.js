@@ -154,6 +154,155 @@ function extractProductDetails() {
 }
 
 
+
+function extractProductCandidates() {
+    const hostname = window.location.hostname;
+
+    const isAmazon =
+        hostname.includes("amazon.in") ||
+        hostname.includes("amazon.com");
+
+    const isFlipkart = hostname.includes("flipkart.com");
+
+    const candidates = [];
+    const seenUrls = new Set();
+
+    function addCandidate(product) {
+        if (!product.title || !product.url) return;
+
+        if (seenUrls.has(product.url)) return;
+        seenUrls.add(product.url);
+
+        candidates.push(product);
+    }
+
+    // AMAZON SEARCH RESULTS
+    if (isAmazon) {
+        const cards = document.querySelectorAll(
+            '[data-component-type="s-search-result"], [data-asin]'
+        );
+
+        cards.forEach(card => {
+            const asin = card.getAttribute("data-asin");
+
+            if (!asin || asin.length < 5) return;
+
+            const link =
+                card.querySelector('h2 a[href]') ||
+                card.querySelector('a[href*="/dp/"]') ||
+                card.querySelector('a[href*="/gp/product/"]');
+
+            if (!link) return;
+
+            const titleElement =
+                card.querySelector("h2 a span") ||
+                card.querySelector("h2 span") ||
+                card.querySelector(".a-text-normal");
+
+            const imageElement = card.querySelector("img");
+
+            const priceElement =
+                card.querySelector(".a-price .a-offscreen");
+
+            const title =
+                titleElement?.innerText?.trim() ||
+                link.innerText?.trim() ||
+                imageElement?.alt?.trim() ||
+                "";
+
+            let url;
+
+            try {
+                url = new URL(link.href, window.location.origin).href;
+                const parsed = new URL(url);
+
+                if (
+                    !["www.amazon.in", "amazon.in",
+                      "www.amazon.com", "amazon.com"].includes(parsed.hostname)
+                ) {
+                    return;
+                }
+
+                // Normalize Amazon product URLs.
+                url = `${parsed.origin}/dp/${asin}`;
+            } catch {
+                return;
+            }
+
+            addCandidate({
+                platform: "amazon",
+                title,
+                image: imageElement?.src || "",
+                price: priceElement?.innerText?.trim() || "",
+                url
+            });
+        });
+    }
+
+    // FLIPKART SEARCH RESULTS
+    if (isFlipkart) {
+        const links = document.querySelectorAll('a[href*="/p/"]');
+
+        links.forEach(link => {
+            let parsed;
+
+            try {
+                parsed = new URL(link.href, window.location.origin);
+
+                if (parsed.hostname !== "www.flipkart.com" &&
+                    parsed.hostname !== "flipkart.com") {
+                    return;
+                }
+            } catch {
+                return;
+            }
+
+            const productPath = parsed.pathname;
+            const productLink = link.closest("a[href*='/p/']") || link;
+
+            const card =
+                productLink.closest('[data-id]') ||
+                productLink.parentElement?.parentElement?.parentElement ||
+                productLink;
+
+            const imageElement = card.querySelector("img");
+
+            const titleElement =
+                card.querySelector("a[title]") ||
+                card.querySelector("div[title]");
+
+            const title =
+                titleElement?.getAttribute("title")?.trim() ||
+                productLink.getAttribute("title")?.trim() ||
+                imageElement?.alt?.trim() ||
+                productLink.innerText?.trim() ||
+                "";
+
+            const priceElement =
+                card.querySelector('[class*="Nx9bqj"]');
+
+            addCandidate({
+                platform: "flipkart",
+                title,
+                image: imageElement?.src || "",
+                price: priceElement?.innerText?.trim() || "",
+                url: `${parsed.origin}${productPath}`
+            });
+        });
+    }
+
+    console.log(
+        "ReviewLens candidate extraction:",
+        hostname,
+        "Cards found:",
+        candidates.length,
+        candidates
+    );
+
+    return candidates.slice(0, 15);
+}
+
+
 chrome.runtime.onMessage.addListener(
     (message, sender, sendResponse) => {
         if (message.action === "extractReviews") {
@@ -167,6 +316,13 @@ chrome.runtime.onMessage.addListener(
             sendResponse({
                 success: true,
                 product: extractProductDetails()
+            });
+        }
+
+        if (message.action === "extractProductCandidates") {
+            sendResponse({
+                success: true,
+                candidates: extractProductCandidates()
             });
         }
 

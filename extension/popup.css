@@ -396,3 +396,76 @@ h1 {
     font-size: 12px;
     line-height: 1.5;
 }
+
+
+/* =========================
+   Popup scrolling and layout
+========================= */
+
+html {
+    width: 400px;
+    max-height: 600px;
+    overflow-x: hidden;
+}
+
+body {
+    width: 400px;
+    max-height: 600px;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.container {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Keep all output containers within the popup */
+
+#comparisonContainer,
+#summaryContainer,
+#productMatchContainer,
+#reviewsContainer {
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+/* Cross-platform comparison */
+
+#comparisonContainer {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    margin-bottom: 18px;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+}
+
+.comparison-card {
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 10px;
+    overflow-wrap: anywhere;
+}
+
+.comparison-card h3 {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.comparison-metric {
+    margin-top: 8px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.match-note {
+    margin-top: 12px;
+    overflow-wrap: anywhere;
+}
