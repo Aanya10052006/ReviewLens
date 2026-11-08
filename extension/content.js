@@ -1,6 +1,7 @@
 
 console.log("ReviewLens content script loaded!");
 
+
 function extractReviews() {
     const reviews = [];
     const hostname = window.location.hostname;
@@ -11,25 +12,55 @@ function extractReviews() {
 
     const isFlipkart = hostname.includes("flipkart.com");
 
+    const isFlipkartReviewsPage =
+        isFlipkart &&
+        window.location.pathname.includes("/product-reviews/");
+
     let reviewElements = [];
 
+    // AMAZON
     if (isAmazon) {
         reviewElements = [
             ...document.querySelectorAll('[data-hook="review"]')
         ];
-    } else if (isFlipkart) {
-        reviewElements = [
-            ...document.querySelectorAll("div.css-g5y9jx")
-        ].filter(review => {
-            const textElement = review.querySelector("span.css-1jxf684");
-            const ratingElement = review.querySelector("div.css-146c3p1");
+    }
 
-            return Boolean(textElement && ratingElement) &&
-                /^[0-5](?:\.[0-9]+)?$/.test(
-                    ratingElement.innerText.trim()
+    // FLIPKART
+    else if (isFlipkart) {
+
+        // Dedicated Flipkart reviews page
+        if (isFlipkartReviewsPage) {
+            reviewElements = [
+                ...document.querySelectorAll(
+                    "div.css-g5y9jx.r-z2wwpe.r-eqz5dr"
+                )
+            ].filter(review => {
+                const text = review.innerText?.trim() || "";
+
+                return (
+                    text.includes("Verified Purchase") &&
+                    /^\s*[1-5](?:\.0)?\s*\n/.test(text)
                 );
-        });
-    } else {
+            });
+        }
+
+        // Normal Flipkart product page
+        else {
+            reviewElements = [
+                ...document.querySelectorAll("div.vQDoqR")
+            ].filter(review => {
+                const textElement = review.querySelector("a");
+                const text = textElement?.innerText.trim() || "";
+
+                return (
+                    text.length > 0 &&
+                    review.innerText.includes("Verified Buyer")
+                );
+            });
+        }
+    }
+
+    else {
         console.warn("Unsupported shopping website:", hostname);
         return reviews;
     }
@@ -40,13 +71,16 @@ function extractReviews() {
         let text = "";
         let rating = null;
 
+        // AMAZON EXTRACTION
         if (isAmazon) {
             const textElement = review.querySelector(
-                '[data-hook="reviewRichContentContainer"] span, [data-hook="review-body"] span'
+                '[data-hook="reviewRichContentContainer"] span, ' +
+                '[data-hook="review-body"] span'
             );
 
             const ratingElement = review.querySelector(
-                '[data-hook="review-star-rating"], [data-hook="cmps-review-star-rating"]'
+                '[data-hook="review-star-rating"], ' +
+                '[data-hook="cmps-review-star-rating"]'
             );
 
             if (textElement) {
@@ -62,35 +96,66 @@ function extractReviews() {
                     rating = parseFloat(match[1]);
                 }
             }
-        } else if (isFlipkart) {
-            const textElement = review.querySelector(
-                "span.css-1jxf684"
-            );
+        }
 
-            const ratingElement = review.querySelector(
-                "div.css-146c3p1"
-            );
+        // FLIPKART EXTRACTION
+        else if (isFlipkart) {
 
-            if (textElement) {
-                text = textElement.innerText
-                    .replace(/\s*READ MORE\s*$/i, "")
-                    .trim();
-            }
+            if (isFlipkartReviewsPage) {
+                const lines = review.innerText
+                    .split("\n")
+                    .map(line => line.trim())
+                    .filter(Boolean);
 
-            if (ratingElement) {
-                const match = ratingElement.innerText.trim().match(
-                    /^([0-5](?:\.[0-9]+)?)$/
+                const ratingMatch = lines[0]?.match(
+                    /^([1-5](?:\.0)?)$/
                 );
 
-                if (match) {
-                    rating = parseFloat(match[1]);
+                if (ratingMatch) {
+                    rating = parseFloat(ratingMatch[1]);
+                }
+
+                // Extract the review title/body text.
+                // Skip rating, separators, product variant,
+                // reviewer details and purchase metadata.
+                const excluded = /^(?:[1-5](?:\.0)?|•|Review for:|Verified Purchase|Helpful for\b|Flipkart Customer|READ MORE$)/i;
+
+                const candidates = lines.filter(line =>
+                    !excluded.test(line) &&
+                    !/^\d+$/.test(line) &&
+                    !/^·\s*/.test(line) &&
+                    !/months? ago$/i.test(line) &&
+                    !/^\w{3,},\s*\d{4}$/.test(line)
+                );
+
+                text = candidates
+                    .filter(line =>
+                        !/^(?:Priyo Sen|Kolkata)$/i.test(line)
+                    )
+                    .slice(0, 2)
+                    .join(" ")
+                    .trim();
+            } else {
+                const textElement = review.querySelector("a");
+
+                if (textElement) {
+                    text = textElement.innerText
+                        .replace(/\s*READ MORE\s*$/i, "")
+                        .trim();
+                }
+
+                const ratingMatch = review.innerText
+                    .trim()
+                    .match(/^([1-5])\s*(?:\n|$)/);
+
+                if (ratingMatch) {
+                    rating = parseFloat(ratingMatch[1]);
                 }
             }
         }
 
         if (text) {
             reviews.push({ text, rating });
-
             console.log(
                 `Review ${index + 1}:`,
                 text,
@@ -306,9 +371,16 @@ function extractProductCandidates() {
 chrome.runtime.onMessage.addListener(
     (message, sender, sendResponse) => {
         if (message.action === "extractReviews") {
+            console.log("ReviewLens: extractReviews message received");
+
+            const reviews = extractReviews();
+
+            console.log("ReviewLens: extracted review count:", reviews.length);
+            console.log("ReviewLens: extracted reviews:", reviews);
+
             sendResponse({
                 success: true,
-                reviews: extractReviews()
+                reviews: reviews
             });
         }
 

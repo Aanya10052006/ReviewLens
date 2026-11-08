@@ -469,6 +469,11 @@ const matchedResponse = await sendMessageWithRetry(
     { action: "extractReviews" }
 );
 
+console.log("Matched tab ID:", searchTabId);
+console.log("Matched product URL:", matchedProduct.url);
+console.log("Matched response:", matchedResponse);
+console.log("Matched reviews:", matchedResponse?.reviews);
+
 const matchedReviews = matchedResponse?.reviews || [];
 
 if (matchedReviews.length === 0) {
