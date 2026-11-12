@@ -23,3 +23,13 @@ Thumbs.db
 
 # Local dependency backup
 backend/requirements.local.txt
+
+# Local deployment environment
+.venv-deploy/
+
+# Inference worker virtual environment
+inference-worker/.venv/
+
+# Temporary upload files
+ReviewLens-upload/
+ReviewLens.zip

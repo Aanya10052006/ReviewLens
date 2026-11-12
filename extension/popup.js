@@ -1,3 +1,5 @@
+const BACKEND_URL = "https://reviewlens-backend-soar.onrender.com";
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     const status = document.getElementById("status");
@@ -149,9 +151,10 @@ function waitForTabToLoad(tabId, expectedUrl = null) {
 
 async function analyzeProductReviews(product, reviews) {
     const response = await fetch(
-        "http://127.0.0.1:8001/analyze",
+        `${BACKEND_URL}/analyze`,
         {
             method: "POST",
+            signal: AbortSignal.timeout(180000),
             headers: {
                 "Content-Type": "application/json"
             },
@@ -609,9 +612,10 @@ if (matchedReviews.length === 0) {
             // -----------------------------
 
             const apiResponse = await fetch(
-                "http://127.0.0.1:8001/analyze",
+                `${BACKEND_URL}/analyze`,
                 {
                     method: "POST",
+            signal: AbortSignal.timeout(180000),
 
                     headers: {
                         "Content-Type": "application/json"
@@ -943,7 +947,7 @@ summaryContainer.innerHTML = `
             );
 
             status.textContent =
-                "Error analyzing reviews.";
+                `Error analyzing reviews: ${error.message}`;
 
         }
 

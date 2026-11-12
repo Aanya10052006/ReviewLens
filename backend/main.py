@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import pipeline
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+from inference_client import infer, max_similarities
+from pydantic import Field
 from fastapi.middleware.cors import CORSMiddleware
 
 ASPECT_KEYWORDS = {
@@ -41,29 +40,8 @@ app.add_middleware(
 )
 
 
-print("Loading sentiment analysis model...")
-
-
-# Load the pretrained sentiment analysis model
-sentiment_pipeline = pipeline(
-    "sentiment-analysis",
-    model="distilbert-base-uncased-finetuned-sst-2-english"
-)
-
-
-print("Sentiment model loaded!")
-
-print("Loading sentence embedding model...")
-
-embedding_model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
-
-print("Sentence embedding model loaded!")
-
-
 class Review(BaseModel):
-    text: str
+    text: str = Field(min_length=1, max_length=10000)
     rating: float | None = None
 
 
@@ -71,7 +49,7 @@ class ReviewRequest(BaseModel):
     platform: str = "amazon"
     product_name: str | None = None
     product_id: str | None = None
-    reviews: list[Review]
+    reviews: list[Review] = Field(max_length=100)
 
 def detect_aspects(review):
     review_lower = review.lower()
@@ -111,27 +89,14 @@ def analyze_reviews(request: ReviewRequest):
 
     aspect_sentiments = {}
 
-    embeddings = embedding_model.encode(review_texts)
+    predictions, embeddings = infer(review_texts) if review_texts else ([], [])
+    similarities = max_similarities(embeddings)
 
     for current_index, review in enumerate(request.reviews):
 
         text = review.text
 
-        max_similarity = 0
-
-        for other_index in range(len(review_texts)):
-
-            if other_index == current_index:
-                continue
-
-            similarity = float(
-                cosine_similarity(
-                    [embeddings[current_index]],
-                    [embeddings[other_index]]
-                )[0][0]
-            )
-
-            max_similarity = max(max_similarity, similarity)
+        max_similarity = similarities[current_index]
 
         is_similar = max_similarity >= 0.80
 
@@ -141,7 +106,7 @@ def analyze_reviews(request: ReviewRequest):
 
         seen_reviews.add(normalized_text)
 
-        result = sentiment_pipeline(text[:512])[0]
+        result = predictions[current_index]
 
         aspects = detect_aspects(text)
 
@@ -191,3 +156,7 @@ def analyze_reviews(request: ReviewRequest):
     "results": results,
     "aspect_sentiments": aspect_sentiments
 }
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "inference": "external"}
