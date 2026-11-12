@@ -33,3 +33,17 @@ inference-worker/.venv/
 # Temporary upload files
 ReviewLens-upload/
 ReviewLens.zip
+
+# ONNX optimization virtual environment
+.venv-onnx/
+
+# Temporary ONNX export files
+models-onnx/**/model.onnx
+models-onnx/**/model.onnx_data
+
+# ONNX optimization cache
+models-onnx/**/.cache/
+
+# Original ONNX exports (not required for deployment)
+models-onnx/distilbert/
+models-onnx/minilm/
