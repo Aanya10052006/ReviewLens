@@ -152,8 +152,23 @@ Model Optimization
 The initial architecture used transformer models for sentiment classification and sentence embeddings. To make deployment more practical on resource-constrained infrastructure, ReviewLens uses INT8-quantized ONNX exports of DistilBERT and MiniLM in a separate inference worker.
 
 This separation avoids loading both models into the main FastAPI process and allows the API and inference components to be deployed independently. It does not eliminate all free-tier memory, cold-start, or latency constraints.
-Screenshots
-Screenshots of the review analysis dashboard and cross-platform comparison will be added here.
+## Screenshots
+
+### Amazon Review Analysis
+
+![Amazon Review Analysis Dashboard](screenshots/amazon-analysis.png)
+
+### Flipkart Review Analysis
+
+![Flipkart Review Analysis Dashboard](screenshots/flipkart-analysis.png)
+
+### Amazon vs Flipkart Comparison
+
+![Amazon vs Flipkart Review Comparison](screenshots/cross-platform-comparison.png)
+
+---
+
+
 Known Limitations
 
 - Marketplace page structures can change, affecting extraction reliability.
