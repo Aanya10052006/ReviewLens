@@ -39,7 +39,27 @@ def infer(texts):
             if len(vector) != 384 or not all(isinstance(x, (float, int)) and math.isfinite(x) for x in vector):
                 raise ValueError('Invalid embedding')
         return predictions, embeddings
+    
     except httpx.TimeoutException as exc:
         raise HTTPException(504, 'Inference timed out. Wake the worker and retry.') from exc
+    
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
-        raise HTTPException(503, 'Inference worker unavailable or returned invalid data. Retry shortly.') from exc
+        import logging
+
+        logger = logging.getLogger("uvicorn.error")
+
+        if isinstance(exc, httpx.HTTPStatusError):
+            logger.error(
+                "Inference worker returned HTTP %s",
+                exc.response.status_code
+            )
+        else:
+            logger.error(
+                "Inference failure: %s",
+                type(exc).__name__
+            )
+
+        raise HTTPException(
+            503,
+            "Inference worker unavailable or returned invalid data. Retry shortly."
+        ) from exc
