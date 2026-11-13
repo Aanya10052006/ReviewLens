@@ -134,19 +134,54 @@ function waitForTabToLoad(tabId, expectedUrl = null) {
 
 
     async function sendMessageWithRetry(tabId, message) {
-        let lastError;
+    let lastError;
 
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
-                return await chrome.tabs.sendMessage(tabId, message);
-            } catch (error) {
-                lastError = error;
-                await new Promise(resolve => setTimeout(resolve, 700));
+    for (let attempt = 1; attempt <= 10; attempt++) {
+        try {
+            const response = await chrome.tabs.sendMessage(
+                tabId,
+                message
+            );
+
+            if (
+                message.action !== "extractReviews" ||
+                (response?.success &&
+                 Array.isArray(response.reviews) &&
+                 response.reviews.length > 0)
+            ) {
+                return response;
             }
+
+            console.log(
+                `ReviewLens: Attempt ${attempt} - No reviews yet.`
+            );
+
+        } catch (error) {
+            lastError = error;
+
+            console.warn(
+                `ReviewLens: Attempt ${attempt} failed:`,
+                error.message
+            );
         }
 
-        throw lastError || new Error("Could not contact the product page.");
+        if (attempt < 10) {
+            await new Promise(resolve =>
+                setTimeout(resolve, 1500)
+            );
+        }
     }
+
+    if (message.action === "extractReviews") {
+        throw new Error(
+            "No reviews found after multiple attempts. " +
+            "Check that the matching product's reviews page is open."
+        );
+    }
+
+    throw lastError ||
+        new Error("Could not contact the product page.");
+}
 
 
 async function analyzeProductReviews(product, reviews) {
