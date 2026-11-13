@@ -1,58 +1,161 @@
+
 console.log("ReviewLens content script loaded!");
 
+
 function extractReviews() {
-
     const reviews = [];
+    const hostname = window.location.hostname;
 
-    const reviewElements =
-        document.querySelectorAll('[data-hook="review"]');
+    const isAmazon =
+        hostname.includes("amazon.in") ||
+        hostname.includes("amazon.com");
 
-    console.log(
-        "Review elements found:",
-        reviewElements.length
-    );
+    const isFlipkart = hostname.includes("flipkart.com");
+
+    const isFlipkartReviewsPage =
+        isFlipkart &&
+        window.location.pathname.includes("/product-reviews/");
+
+    let reviewElements = [];
+
+    // AMAZON
+    if (isAmazon) {
+        reviewElements = [
+            ...document.querySelectorAll('[data-hook="review"]')
+        ];
+    }
+
+    // FLIPKART
+    else if (isFlipkart) {
+
+        // Dedicated Flipkart reviews page
+        if (isFlipkartReviewsPage) {
+            reviewElements = [
+                ...document.querySelectorAll(
+                    "div.css-g5y9jx.r-z2wwpe.r-eqz5dr"
+                )
+            ].filter(review => {
+                const text = review.innerText?.trim() || "";
+
+                return (
+                    text.includes("Verified Purchase") &&
+                    /^\s*[1-5](?:\.0)?\s*\n/.test(text)
+                );
+            });
+        }
+
+        // Normal Flipkart product page
+        else {
+            reviewElements = [
+                ...document.querySelectorAll("div.vQDoqR")
+            ].filter(review => {
+                const textElement = review.querySelector("a");
+                const text = textElement?.innerText.trim() || "";
+
+                return (
+                    text.length > 0 &&
+                    review.innerText.includes("Verified Buyer")
+                );
+            });
+        }
+    }
+
+    else {
+        console.warn("Unsupported shopping website:", hostname);
+        return reviews;
+    }
+
+    console.log("Review elements found:", reviewElements.length);
 
     reviewElements.forEach((review, index) => {
-
-        // Extract review text
-        const reviewTextElement =
-            review.querySelector(
-                '[data-hook="reviewRichContentContainer"] span'
-            );
-
-        // Extract star rating
-        const ratingElement =
-            review.querySelector(
-                '[data-hook="review-star-rating"]'
-            );
-
         let text = "";
         let rating = null;
 
-        if (reviewTextElement) {
-            text = reviewTextElement.innerText.trim();
+        // AMAZON EXTRACTION
+        if (isAmazon) {
+            const textElement = review.querySelector(
+                '[data-hook="reviewRichContentContainer"] span, ' +
+                '[data-hook="review-body"] span'
+            );
+
+            const ratingElement = review.querySelector(
+                '[data-hook="review-star-rating"], ' +
+                '[data-hook="cmps-review-star-rating"]'
+            );
+
+            if (textElement) {
+                text = textElement.innerText.trim();
+            }
+
+            if (ratingElement) {
+                const match = ratingElement.innerText.match(
+                    /([0-5](?:\.[0-9]+)?)\s*out of/
+                );
+
+                if (match) {
+                    rating = parseFloat(match[1]);
+                }
+            }
         }
 
-        if (ratingElement) {
+        // FLIPKART EXTRACTION
+        else if (isFlipkart) {
 
-            const ratingText =
-                ratingElement.innerText.trim();
+            if (isFlipkartReviewsPage) {
+                const lines = review.innerText
+                    .split("\n")
+                    .map(line => line.trim())
+                    .filter(Boolean);
 
-            const match =
-                ratingText.match(/([0-9.]+)\s+out of/);
+                const ratingMatch = lines[0]?.match(
+                    /^([1-5](?:\.0)?)$/
+                );
 
-            if (match) {
-                rating = parseFloat(match[1]);
+                if (ratingMatch) {
+                    rating = parseFloat(ratingMatch[1]);
+                }
+
+                // Extract the review title/body text.
+                // Skip rating, separators, product variant,
+                // reviewer details and purchase metadata.
+                const excluded = /^(?:[1-5](?:\.0)?|•|Review for:|Verified Purchase|Helpful for\b|Flipkart Customer|READ MORE$)/i;
+
+                const candidates = lines.filter(line =>
+                    !excluded.test(line) &&
+                    !/^\d+$/.test(line) &&
+                    !/^·\s*/.test(line) &&
+                    !/months? ago$/i.test(line) &&
+                    !/^\w{3,},\s*\d{4}$/.test(line)
+                );
+
+                text = candidates
+                    .filter(line =>
+                        !/^(?:Priyo Sen|Kolkata)$/i.test(line)
+                    )
+                    .slice(0, 2)
+                    .join(" ")
+                    .trim();
+            } else {
+                const textElement = review.querySelector("a");
+
+                if (textElement) {
+                    text = textElement.innerText
+                        .replace(/\s*READ MORE\s*$/i, "")
+                        .trim();
+                }
+
+                const ratingMatch = review.innerText
+                    .trim()
+                    .match(/^([1-5])\s*(?:\n|$)/);
+
+                if (ratingMatch) {
+                    rating = parseFloat(ratingMatch[1]);
+                }
             }
         }
 
         if (text) {
-
-            reviews.push({
-                text: text,
-                rating: rating
-            });
-
+            reviews.push({ text, rating });
             console.log(
                 `Review ${index + 1}:`,
                 text,
@@ -62,25 +165,236 @@ function extractReviews() {
         }
     });
 
+    console.log("Final extracted reviews:", reviews);
+    return reviews;
+}
+
+
+function extractProductDetails() {
+    const hostname = window.location.hostname;
+
+    const isAmazon =
+        hostname.includes("amazon.in") ||
+        hostname.includes("amazon.com");
+
+    const isFlipkart = hostname.includes("flipkart.com");
+
+    let title = "";
+    let image = "";
+    let price = "";
+
+    if (isAmazon) {
+        title =
+            document.querySelector("#productTitle")
+                ?.innerText.trim() || document.title;
+
+        image =
+            document.querySelector("#landingImage")
+                ?.src || "";
+
+        price =
+            document.querySelector(".a-price .a-offscreen")
+                ?.innerText.trim() || "";
+    } else if (isFlipkart) {
+        title =
+            document.querySelector("span.VU-ZEz")
+                ?.innerText.trim() || document.title;
+
+        image =
+            document.querySelector("img.DByuf4")
+                ?.src || "";
+
+        price =
+            document.querySelector(".Nx9bqj.CxhGGd")
+                ?.innerText.trim() || "";
+    }
+
+    return {
+        platform: isAmazon ? "amazon" : isFlipkart ? "flipkart" : "unknown",
+        title,
+        image,
+        price,
+        url: window.location.href
+    };
+}
+
+
+
+function extractProductCandidates() {
+    const hostname = window.location.hostname;
+
+    const isAmazon =
+        hostname.includes("amazon.in") ||
+        hostname.includes("amazon.com");
+
+    const isFlipkart = hostname.includes("flipkart.com");
+
+    const candidates = [];
+    const seenUrls = new Set();
+
+    function addCandidate(product) {
+        if (!product.title || !product.url) return;
+
+        if (seenUrls.has(product.url)) return;
+        seenUrls.add(product.url);
+
+        candidates.push(product);
+    }
+
+    // AMAZON SEARCH RESULTS
+    if (isAmazon) {
+        const cards = document.querySelectorAll(
+            '[data-component-type="s-search-result"], [data-asin]'
+        );
+
+        cards.forEach(card => {
+            const asin = card.getAttribute("data-asin");
+
+            if (!asin || asin.length < 5) return;
+
+            const link =
+                card.querySelector('h2 a[href]') ||
+                card.querySelector('a[href*="/dp/"]') ||
+                card.querySelector('a[href*="/gp/product/"]');
+
+            if (!link) return;
+
+            const titleElement =
+                card.querySelector("h2 a span") ||
+                card.querySelector("h2 span") ||
+                card.querySelector(".a-text-normal");
+
+            const imageElement = card.querySelector("img");
+
+            const priceElement =
+                card.querySelector(".a-price .a-offscreen");
+
+            const title =
+                titleElement?.innerText?.trim() ||
+                link.innerText?.trim() ||
+                imageElement?.alt?.trim() ||
+                "";
+
+            let url;
+
+            try {
+                url = new URL(link.href, window.location.origin).href;
+                const parsed = new URL(url);
+
+                if (
+                    !["www.amazon.in", "amazon.in",
+                      "www.amazon.com", "amazon.com"].includes(parsed.hostname)
+                ) {
+                    return;
+                }
+
+                // Normalize Amazon product URLs.
+                url = `${parsed.origin}/dp/${asin}`;
+            } catch {
+                return;
+            }
+
+            addCandidate({
+                platform: "amazon",
+                title,
+                image: imageElement?.src || "",
+                price: priceElement?.innerText?.trim() || "",
+                url
+            });
+        });
+    }
+
+    // FLIPKART SEARCH RESULTS
+    if (isFlipkart) {
+        const links = document.querySelectorAll('a[href*="/p/"]');
+
+        links.forEach(link => {
+            let parsed;
+
+            try {
+                parsed = new URL(link.href, window.location.origin);
+
+                if (parsed.hostname !== "www.flipkart.com" &&
+                    parsed.hostname !== "flipkart.com") {
+                    return;
+                }
+            } catch {
+                return;
+            }
+
+            const productPath = parsed.pathname;
+            const productLink = link.closest("a[href*='/p/']") || link;
+
+            const card =
+                productLink.closest('[data-id]') ||
+                productLink.parentElement?.parentElement?.parentElement ||
+                productLink;
+
+            const imageElement = card.querySelector("img");
+
+            const titleElement =
+                card.querySelector("a[title]") ||
+                card.querySelector("div[title]");
+
+            const title =
+                titleElement?.getAttribute("title")?.trim() ||
+                productLink.getAttribute("title")?.trim() ||
+                imageElement?.alt?.trim() ||
+                productLink.innerText?.trim() ||
+                "";
+
+            const priceElement =
+                card.querySelector('[class*="Nx9bqj"]');
+
+            addCandidate({
+                platform: "flipkart",
+                title,
+                image: imageElement?.src || "",
+                price: priceElement?.innerText?.trim() || "",
+                url: `${parsed.origin}${productPath}`
+            });
+        });
+    }
+
     console.log(
-        "Final extracted reviews:",
-        reviews
+        "ReviewLens candidate extraction:",
+        hostname,
+        "Cards found:",
+        candidates.length,
+        candidates
     );
 
-    return reviews;
+    return candidates.slice(0, 15);
 }
 
 
 chrome.runtime.onMessage.addListener(
     (message, sender, sendResponse) => {
-
         if (message.action === "extractReviews") {
+            console.log("ReviewLens: extractReviews message received");
 
             const reviews = extractReviews();
+
+            console.log("ReviewLens: extracted review count:", reviews.length);
+            console.log("ReviewLens: extracted reviews:", reviews);
 
             sendResponse({
                 success: true,
                 reviews: reviews
+            });
+        }
+
+        if (message.action === "extractProductDetails") {
+            sendResponse({
+                success: true,
+                product: extractProductDetails()
+            });
+        }
+
+        if (message.action === "extractProductCandidates") {
+            sendResponse({
+                success: true,
+                candidates: extractProductCandidates()
             });
         }
 

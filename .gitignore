@@ -1,3 +1,4 @@
+
 # Python
 __pycache__/
 *.py[cod]
@@ -5,6 +6,7 @@ __pycache__/
 # Virtual environments
 venv/
 .venv/
+.venv-*/
 env/
 
 # Environment variables
@@ -19,3 +21,39 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local dependency backup
+backend/requirements.local.txt
+
+# Local deployment environment
+.venv-deploy/
+
+# Inference worker virtual environment
+inference-worker/.venv/
+
+# Temporary upload files
+ReviewLens-upload/
+ReviewLens.zip
+
+# ONNX optimization virtual environment
+.venv-onnx/
+
+# Temporary ONNX export files
+models-onnx/**/model.onnx
+models-onnx/**/model.onnx_data
+
+# ONNX optimization cache
+models-onnx/**/.cache/
+
+# Original ONNX exports (not required for deployment)
+models-onnx/distilbert/
+models-onnx/minilm/
+
+# Local ONNX experiments and benchmarks
+benchmark_*onnx*.py
+compare_minilm_models.py
+test_onnx_*.py
+
+# Local secrets
+.env.*
+!.env.example

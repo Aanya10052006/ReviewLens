@@ -1,0 +1,28 @@
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install lightweight ONNX dependencies
+COPY inference-worker/requirements-onnx.txt ./requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy ONNX inference application
+COPY inference-worker/app_onnx.py ./app_onnx.py
+
+# Copy only the quantized models
+COPY models-onnx/distilbert-int8 ./models-onnx/distilbert-int8
+COPY models-onnx/minilm-int8 ./models-onnx/minilm-int8
+
+# Run as a non-root user
+RUN useradd -m -u 1000 user && chown -R user:user /app
+USER user
+
+ENV OMP_NUM_THREADS=1 \
+    TOKENIZERS_PARALLELISM=false \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 7860
+
+CMD ["uvicorn", "app_onnx:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
