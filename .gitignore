@@ -6,6 +6,7 @@ __pycache__/
 # Virtual environments
 venv/
 .venv/
+.venv-*/
 env/
 
 # Environment variables
@@ -47,3 +48,12 @@ models-onnx/**/.cache/
 # Original ONNX exports (not required for deployment)
 models-onnx/distilbert/
 models-onnx/minilm/
+
+# Local ONNX experiments and benchmarks
+benchmark_*onnx*.py
+compare_minilm_models.py
+test_onnx_*.py
+
+# Local secrets
+.env.*
+!.env.example
